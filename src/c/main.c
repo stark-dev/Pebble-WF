@@ -335,7 +335,7 @@ static void create_canvas() {
   layer_add_child(window_layer, s_date_layer);
 
   s_num_label = text_layer_create(PBL_IF_ROUND_ELSE(
-    GRect(90, 114, 18, 20),
+    GRect(135, 80, 18, 20),
     GRect(102, 75, 18, 20)));
   layer_add_child(s_date_layer, text_layer_get_layer(s_num_label));
   
