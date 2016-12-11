@@ -3,7 +3,7 @@
 #define COLORS PBL_IF_COLOR_ELSE(true, false)
 #define ANTIALIASING true
 #define RADIUS_MARGIN 15
-#define DIAL_DOTS_MARGIN 9
+#define DIAL_DOTS_MARGIN 8
 #define BLACK_DIAL_MARGIN 18
 #define BATT_DOTS_MARGIN 27
 #define HAND_STROKE 5

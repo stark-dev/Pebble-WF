@@ -4,9 +4,9 @@
     "keywords": [
         "pebble-app"
     ],
-    "name": "ziiiro-wf-testing",
+    "name": "ziiiro-wf",
     "pebble": {
-        "displayName": "Ziiiro-WF testing",
+        "displayName": "Ziiiro-WF",
         "enableMultiJS": false,
         "messageKeys": {
             "dummy": 0
