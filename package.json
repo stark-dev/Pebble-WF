@@ -4,7 +4,7 @@
     "keywords": [
         "pebble-app"
     ],
-    "name": "ziiiro-wf",
+    "name": "zwf",
     "pebble": {
         "displayName": "Ziiiro-WF",
         "enableMultiJS": false,
@@ -29,10 +29,10 @@
         "targetPlatforms": [
             "basalt"
         ],
-        "uuid": "25becbb7-c0bc-4180-82b6-b36f1bf894c7",
+        "uuid": "b7b2527e-c901-44af-baa0-67fca71b652a",
         "watchapp": {
             "watchface": true
         }
     },
-    "version": "0.1.0"
+    "version": "0.2.0"
 }
