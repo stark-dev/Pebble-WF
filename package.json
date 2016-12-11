@@ -13,7 +13,17 @@
         },
         "projectType": "native",
         "resources": {
-            "media": []
+            "media": [
+                {
+                    "file": "images/Ziiiro-WF",
+                    "menuIcon": true,
+                    "name": "IMAGE_ZIIIRO_WF",
+                    "targetPlatforms": [
+                        "basalt"
+                    ],
+                    "type": "png"
+                }
+            ]
         },
         "sdkVersion": "3",
         "targetPlatforms": [

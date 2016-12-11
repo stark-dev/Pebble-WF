@@ -2,11 +2,14 @@
 
 #define COLORS PBL_IF_COLOR_ELSE(true, false)
 #define ANTIALIASING true
-#define RADIUS_MARGIN 15
-#define DIAL_DOTS_MARGIN 8
-#define BLACK_DIAL_MARGIN 18
-#define BATT_DOTS_MARGIN 27
-#define HAND_STROKE 5
+#define RADIUS_MARGIN 0
+#define DIAL_DOTS_MARGIN 11
+#define BLACK_DIAL_MARGIN 24
+#define BATT_DOTS_MARGIN 30
+#define HAND_STROKE 8
+#define DOT_L 4
+#define DOT_M 3
+#define DOT_S 2
 #define ANIMATION_DURATION 500
 #define ANIMATION_DELAY 600
 
@@ -44,8 +47,8 @@ static bool s_animating = false;
 
 //connection and battery
 static uint8_t s_battery_level;
-static bool s_charging;
-static bool s_bt_connected;
+static bool s_charging = false;
+static bool s_bt_connected = true;
 
 //dots params
 static uint8_t dot_width = 1;
@@ -145,11 +148,11 @@ static void update_proc(Layer *layer, GContext *ctx) {
     graphics_context_set_stroke_width(ctx, 1);
     graphics_context_set_fill_color(ctx, GColorWhite);
     if(i%15 == 0)
-      dot_width = 3;
+      dot_width = DOT_L;
     else if(i%5 == 0)
-      dot_width = 2;
+      dot_width = DOT_M;
     else
-      dot_width = 1;
+      dot_width = DOT_S;
     
     graphics_fill_circle(ctx, dot_centre, dot_width);
   }
@@ -202,14 +205,14 @@ static void update_proc(Layer *layer, GContext *ctx) {
     // Draw dots with positive length only
     if(i > ((s_battery_level + 10)/20 - 1)){
       graphics_context_set_fill_color(ctx, GColorDarkGreen);
-      graphics_fill_circle(ctx, dot_centre, 1);
+      graphics_fill_circle(ctx, dot_centre, DOT_S);
     }
     else {
       if(s_charging)
         graphics_context_set_fill_color(ctx, GColorYellow);
       else
         graphics_context_set_fill_color(ctx, GColorGreen);
-      graphics_fill_circle(ctx, dot_centre, 2);
+      graphics_fill_circle(ctx, dot_centre, DOT_M);
     }
   }
   
@@ -221,11 +224,11 @@ static void update_proc(Layer *layer, GContext *ctx) {
   
   if(s_bt_connected){
     graphics_context_set_fill_color(ctx, GColorBlue);
-    graphics_fill_circle(ctx, dot_centre, 2);
+    graphics_fill_circle(ctx, dot_centre, DOT_M);
   }
   else {
     graphics_context_set_fill_color(ctx, GColorRed);
-    graphics_fill_circle(ctx, dot_centre, 2);
+    graphics_fill_circle(ctx, dot_centre, DOT_M);
   }
   
   //bluetooth dot
@@ -236,11 +239,11 @@ static void update_proc(Layer *layer, GContext *ctx) {
   
   if(quiet_time_is_active()){
     graphics_context_set_fill_color(ctx, GColorRed);
-    graphics_fill_circle(ctx, dot_centre, 2);
+    graphics_fill_circle(ctx, dot_centre, DOT_M);
   }
   else {
     graphics_context_set_fill_color(ctx, GColorGreen);
-    graphics_fill_circle(ctx, dot_centre, 2);
+    graphics_fill_circle(ctx, dot_centre, DOT_M);
   }
   
 }
@@ -312,11 +315,11 @@ static void create_canvas() {
 
   s_num_label = text_layer_create(PBL_IF_ROUND_ELSE(
     GRect(90, 114, 18, 20),
-    GRect(103, 75, 18, 20)));
+    GRect(102, 75, 18, 20)));
   text_layer_set_text(s_num_label, s_num_buffer);
   text_layer_set_background_color(s_num_label, GColorClear);
   text_layer_set_text_color(s_num_label, GColorWhite);
-  text_layer_set_font(s_num_label, fonts_get_system_font(FONT_KEY_GOTHIC_14));
+  text_layer_set_font(s_num_label, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
 
   layer_add_child(s_date_layer, text_layer_get_layer(s_num_label));
   
@@ -393,7 +396,7 @@ static void init() {
     .pebble_app_connection_handler = bluetooth_callback
   });
   // Ensure bluetooth connection is displayed from the start
-  bluetooth_callback(connection_service_peek_pebble_app_connection());
+  //bluetooth_callback(connection_service_peek_pebble_app_connection());
 }
 
 static void deinit() {
