@@ -1,1 +1,1 @@
-# ZWF (Ziiiro WatchFace)
+# ZWF watchface
