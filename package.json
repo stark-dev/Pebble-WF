@@ -2,7 +2,7 @@
     "author": "Stark Industries",
     "dependencies": {},
     "keywords": [
-        "pebble-app"
+        "pebble-watchface"
     ],
     "name": "ziiiro-wf",
     "pebble": {
@@ -25,7 +25,7 @@
                 }
             ]
         },
-        "sdkVersion": "3",
+        "sdkVersion": "4",
         "targetPlatforms": [
             "basalt"
         ],
