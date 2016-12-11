@@ -5,7 +5,8 @@
 #define RADIUS_MARGIN 15
 #define DIAL_DOTS_MARGIN 9
 #define BLACK_DIAL_MARGIN 18
-#define BATT_DOTS_MARGIN 25
+#define BATT_DOTS_MARGIN 27
+#define HAND_STROKE 5
 #define ANIMATION_DURATION 500
 #define ANIMATION_DELAY 600
 
@@ -21,6 +22,7 @@ static Layer *s_canvas_layer, * s_date_layer;
 static TextLayer *s_num_label;
 //UI points
 static GPoint s_center;
+static GPoint dot_centre;
 //Time
 static Time s_last_time, s_anim_time;
 static char s_num_buffer[4];
@@ -81,7 +83,7 @@ static void animation_stopped(Animation *anim, bool stopped, void *context) {
   s_animating = false;
 }
 
-static void animate(int duration, int delay, AnimationImplementation *implementation, bool handlers) {
+static void animate(int duration, int delay, AnimationImplementation *implementation, bool handlers) {  
   Animation *anim = animation_create();
   animation_set_duration(anim, duration);
   animation_set_delay(anim, delay);
@@ -133,7 +135,7 @@ static void update_proc(Layer *layer, GContext *ctx) {
   //dial dots
   for(int i=0; i<60; i++){
     // Plot dots
-    GPoint dot_centre = (GPoint) {
+    dot_centre = (GPoint) {
       .x = (int16_t)(sin_lookup(TRIG_MAX_ANGLE * i / 60) * (int32_t)(s_dial_dots_radius) / TRIG_MAX_RATIO) + s_center.x,
       .y = (int16_t)(-cos_lookup(TRIG_MAX_ANGLE * i / 60) * (int32_t)(s_dial_dots_radius) / TRIG_MAX_RATIO) + s_center.y,
     };
@@ -176,13 +178,13 @@ static void update_proc(Layer *layer, GContext *ctx) {
     .y = (int16_t)(-cos_lookup(hour_angle) * (int32_t)(s_hand_lenght) / TRIG_MAX_RATIO) + s_center.y,
   };  
 
-  // Draw hands with positive length only
+  // Draw hands
   graphics_context_set_stroke_color(ctx, GColorRed);
-  graphics_context_set_stroke_width(ctx, 6);
+  graphics_context_set_stroke_width(ctx, HAND_STROKE);
   graphics_draw_line(ctx, s_center, hour_hand);
   
   graphics_context_set_stroke_color(ctx, GColorWhite);
-  graphics_context_set_stroke_width(ctx, 6);
+  graphics_context_set_stroke_width(ctx, HAND_STROKE);
   graphics_draw_line(ctx, s_center, minute_hand);
   
   // Black dial
@@ -192,9 +194,9 @@ static void update_proc(Layer *layer, GContext *ctx) {
   //battery dots
   for(int i=0; i<5; i++){
     // Plot dots
-    GPoint dot_centre = (GPoint) {
-      .x = (int16_t)(sin_lookup(TRIG_MAX_ANGLE * (20 + i*2) / 60) * (int32_t)(s_bt_conn_dots_radius) / TRIG_MAX_RATIO) + s_center.x,
-      .y = (int16_t)(-cos_lookup(TRIG_MAX_ANGLE * (20 + i*2) / 60) * (int32_t)(s_bt_conn_dots_radius) / TRIG_MAX_RATIO) + s_center.y,
+    dot_centre = (GPoint) {
+      .x = (int16_t)(sin_lookup(TRIG_MAX_ANGLE * (19 + i*2) / 60) * (int32_t)(s_bt_conn_dots_radius) / TRIG_MAX_RATIO) + s_center.x,
+      .y = (int16_t)(-cos_lookup(TRIG_MAX_ANGLE * (19 + i*2) / 60) * (int32_t)(s_bt_conn_dots_radius) / TRIG_MAX_RATIO) + s_center.y,
     };
   
     // Draw dots with positive length only
@@ -212,7 +214,7 @@ static void update_proc(Layer *layer, GContext *ctx) {
   }
   
   //bluetooth dot
-  GPoint dot_centre = (GPoint) {
+  dot_centre = (GPoint) {
     .x = (int16_t)(sin_lookup(TRIG_MAX_ANGLE * (30) / 60) * (int32_t)(s_bt_conn_dots_radius) / TRIG_MAX_RATIO) + s_center.x,
     .y = (int16_t)(-cos_lookup(TRIG_MAX_ANGLE * (30) / 60) * (int32_t)(s_bt_conn_dots_radius) / TRIG_MAX_RATIO) + s_center.y,
   };
@@ -223,6 +225,21 @@ static void update_proc(Layer *layer, GContext *ctx) {
   }
   else {
     graphics_context_set_fill_color(ctx, GColorRed);
+    graphics_fill_circle(ctx, dot_centre, 2);
+  }
+  
+  //bluetooth dot
+  GPoint dot_centre = (GPoint) {
+    .x = (int16_t)(sin_lookup(TRIG_MAX_ANGLE * (45) / 60) * (int32_t)(s_bt_conn_dots_radius) / TRIG_MAX_RATIO) + s_center.x,
+    .y = (int16_t)(-cos_lookup(TRIG_MAX_ANGLE * (45) / 60) * (int32_t)(s_bt_conn_dots_radius) / TRIG_MAX_RATIO) + s_center.y,
+  };
+  
+  if(quiet_time_is_active()){
+    graphics_context_set_fill_color(ctx, GColorRed);
+    graphics_fill_circle(ctx, dot_centre, 2);
+  }
+  else {
+    graphics_context_set_fill_color(ctx, GColorGreen);
     graphics_fill_circle(ctx, dot_centre, 2);
   }
   
@@ -257,7 +274,7 @@ static void hands_update(Animation *anim, AnimationProgress dist_normalized) {
   layer_mark_dirty(s_canvas_layer);
 }
 
-static void start_animation() {
+static void start_animation() {    
   // Prepare animations
   static AnimationImplementation s_radius_impl = {
     .update = radius_update
@@ -295,11 +312,11 @@ static void create_canvas() {
 
   s_num_label = text_layer_create(PBL_IF_ROUND_ELSE(
     GRect(90, 114, 18, 20),
-    GRect(100, 72, 18, 20)));
+    GRect(103, 75, 18, 20)));
   text_layer_set_text(s_num_label, s_num_buffer);
   text_layer_set_background_color(s_num_label, GColorClear);
   text_layer_set_text_color(s_num_label, GColorWhite);
-  text_layer_set_font(s_num_label, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
+  text_layer_set_font(s_num_label, fonts_get_system_font(FONT_KEY_GOTHIC_14));
 
   layer_add_child(s_date_layer, text_layer_get_layer(s_num_label));
   
@@ -343,7 +360,7 @@ static void window_load(Window *window) {
     .will_change = unobstructed_will_change,
     .did_change = unobstructed_did_change
   };
-  unobstructed_area_service_subscribe(handlers, NULL);  
+  //unobstructed_area_service_subscribe(handlers, NULL);  
 }
 
 static void window_unload(Window *window) {
