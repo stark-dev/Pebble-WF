@@ -2,14 +2,14 @@
 
 #define COLORS PBL_IF_COLOR_ELSE(true, false)
 #define ANTIALIASING true
-#define RADIUS_MARGIN 0
+#define RADIUS_MARGIN 2
 #define DIAL_DOTS_MARGIN 11
 #define BLACK_DIAL_MARGIN 24
-#define BATT_DOTS_MARGIN 30
-#define HAND_STROKE 8
-#define DOT_L 4
-#define DOT_M 3
-#define DOT_S 2
+#define BATT_DOTS_MARGIN 33
+#define HAND_STROKE 7
+#define DOT_L 3
+#define DOT_M 2
+#define DOT_S 1
 #define ANIMATION_DURATION 500
 #define ANIMATION_DELAY 600
 
@@ -34,13 +34,15 @@ static uint8_t s_gray_dial_radius = 0;
 static uint8_t s_dial_dots_radius = 0;
 static uint8_t s_black_dial_radius = 0;
 static uint8_t s_bt_conn_dots_radius = 0;
-static uint8_t s_hand_lenght = 0; 
+static uint8_t s_hand_lenght = 0;
+static uint8_t s_text_alpha = 0;
 
 static uint8_t s_gray_dial_radius_f;
 static uint8_t s_dial_dots_radius_f;
 static uint8_t s_black_dial_radius_f;
 static uint8_t s_bt_conn_dots_radius_f;
 static uint8_t s_hand_lenght_f;
+static uint8_t s_text_alpha_f = 255;
 
 static uint8_t s_anim_hours_60 = 0;
 static bool s_animating = false;
@@ -50,7 +52,7 @@ static uint8_t s_battery_level;
 static bool s_charging = false;
 static bool s_bt_connected = true;
 
-//dots params
+// dots params
 static uint8_t dot_width = 1;
 /******************************** Battery Level *******************************/
 
@@ -132,7 +134,10 @@ static void update_proc(Layer *layer, GContext *ctx) {
   graphics_context_set_antialiased(ctx, ANTIALIASING);
 
   // Gray clockface
-  graphics_context_set_fill_color(ctx, GColorDarkGray);
+  graphics_context_set_stroke_width(ctx, DOT_M);
+  graphics_context_set_stroke_color(ctx, GColorDarkGray);
+  graphics_draw_circle(ctx, s_center, s_gray_dial_radius);
+  graphics_context_set_fill_color(ctx, GColorBlack);
   graphics_fill_circle(ctx, s_center, s_gray_dial_radius);
   
   //dial dots
@@ -191,10 +196,13 @@ static void update_proc(Layer *layer, GContext *ctx) {
   graphics_draw_line(ctx, s_center, minute_hand);
   
   // Black dial
+  graphics_context_set_stroke_color(ctx, GColorDarkGray);
+  graphics_context_set_stroke_width(ctx, DOT_M);
+  graphics_draw_circle(ctx, s_center, s_black_dial_radius);
   graphics_context_set_fill_color(ctx, GColorBlack);
   graphics_fill_circle(ctx, s_center, s_black_dial_radius);
   
-  //battery dots
+  // Battery dots
   for(int i=0; i<5; i++){
     // Plot dots
     dot_centre = (GPoint) {
@@ -202,21 +210,21 @@ static void update_proc(Layer *layer, GContext *ctx) {
       .y = (int16_t)(-cos_lookup(TRIG_MAX_ANGLE * (19 + i*2) / 60) * (int32_t)(s_bt_conn_dots_radius) / TRIG_MAX_RATIO) + s_center.y,
     };
   
-    // Draw dots with positive length only
+    // Draw dots
     if(i > ((s_battery_level + 10)/20 - 1)){
       graphics_context_set_fill_color(ctx, GColorDarkGreen);
-      graphics_fill_circle(ctx, dot_centre, DOT_S);
+      graphics_fill_circle(ctx, dot_centre, DOT_M);
     }
     else {
       if(s_charging)
         graphics_context_set_fill_color(ctx, GColorYellow);
       else
         graphics_context_set_fill_color(ctx, GColorGreen);
-      graphics_fill_circle(ctx, dot_centre, DOT_M);
+      graphics_fill_circle(ctx, dot_centre, DOT_L);
     }
   }
   
-  //bluetooth dot
+  // Bluetooth dot
   dot_centre = (GPoint) {
     .x = (int16_t)(sin_lookup(TRIG_MAX_ANGLE * (30) / 60) * (int32_t)(s_bt_conn_dots_radius) / TRIG_MAX_RATIO) + s_center.x,
     .y = (int16_t)(-cos_lookup(TRIG_MAX_ANGLE * (30) / 60) * (int32_t)(s_bt_conn_dots_radius) / TRIG_MAX_RATIO) + s_center.y,
@@ -224,14 +232,14 @@ static void update_proc(Layer *layer, GContext *ctx) {
   
   if(s_bt_connected){
     graphics_context_set_fill_color(ctx, GColorBlue);
-    graphics_fill_circle(ctx, dot_centre, DOT_M);
+    graphics_fill_circle(ctx, dot_centre, DOT_L);
   }
   else {
     graphics_context_set_fill_color(ctx, GColorRed);
-    graphics_fill_circle(ctx, dot_centre, DOT_M);
+    graphics_fill_circle(ctx, dot_centre, DOT_L);
   }
   
-  //bluetooth dot
+  // Silent mode dot
   GPoint dot_centre = (GPoint) {
     .x = (int16_t)(sin_lookup(TRIG_MAX_ANGLE * (45) / 60) * (int32_t)(s_bt_conn_dots_radius) / TRIG_MAX_RATIO) + s_center.x,
     .y = (int16_t)(-cos_lookup(TRIG_MAX_ANGLE * (45) / 60) * (int32_t)(s_bt_conn_dots_radius) / TRIG_MAX_RATIO) + s_center.y,
@@ -239,11 +247,11 @@ static void update_proc(Layer *layer, GContext *ctx) {
   
   if(quiet_time_is_active()){
     graphics_context_set_fill_color(ctx, GColorRed);
-    graphics_fill_circle(ctx, dot_centre, DOT_M);
+    graphics_fill_circle(ctx, dot_centre, DOT_L);
   }
   else {
     graphics_context_set_fill_color(ctx, GColorGreen);
-    graphics_fill_circle(ctx, dot_centre, DOT_M);
+    graphics_fill_circle(ctx, dot_centre, DOT_L);
   }
   
 }
@@ -254,6 +262,9 @@ static void date_update_proc(Layer *layer, GContext *ctx) {
 
   strftime(s_num_buffer, sizeof(s_num_buffer), "%d", t);
   text_layer_set_text(s_num_label, s_num_buffer);
+  text_layer_set_background_color(s_num_label, GColorClear);
+  text_layer_set_text_color(s_num_label, GColorFromRGBA(255,255,255,s_text_alpha));
+  text_layer_set_font(s_num_label, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
 }
 
 static int anim_percentage(AnimationProgress dist_normalized, int max) {
@@ -277,6 +288,11 @@ static void hands_update(Animation *anim, AnimationProgress dist_normalized) {
   layer_mark_dirty(s_canvas_layer);
 }
 
+static void text_update(Animation *anim, AnimationProgress dist_normalized) {
+  s_text_alpha = anim_percentage(dist_normalized, s_text_alpha_f);
+  layer_mark_dirty(s_date_layer);
+}
+
 static void start_animation() {    
   // Prepare animations
   static AnimationImplementation s_radius_impl = {
@@ -288,6 +304,11 @@ static void start_animation() {
     .update = hands_update
   };
   animate(2 * ANIMATION_DURATION, ANIMATION_DELAY, &s_hands_impl, true);
+  
+  static AnimationImplementation s_text_impl = {
+    .update = text_update
+  };
+  animate(2 * ANIMATION_DURATION, ANIMATION_DELAY, &s_text_impl, true);
 }
 
 static void create_canvas() {
@@ -316,11 +337,6 @@ static void create_canvas() {
   s_num_label = text_layer_create(PBL_IF_ROUND_ELSE(
     GRect(90, 114, 18, 20),
     GRect(102, 75, 18, 20)));
-  text_layer_set_text(s_num_label, s_num_buffer);
-  text_layer_set_background_color(s_num_label, GColorClear);
-  text_layer_set_text_color(s_num_label, GColorWhite);
-  text_layer_set_font(s_num_label, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
-
   layer_add_child(s_date_layer, text_layer_get_layer(s_num_label));
   
 }
@@ -338,6 +354,8 @@ static void unobstructed_will_change(GRect final_unobstructed_screen_area, void 
   s_black_dial_radius = 0;
   s_bt_conn_dots_radius = 0;
   s_hand_lenght = 0; 
+  
+  s_text_alpha = 0;
   
   s_anim_hours_60 = 0;
 }
