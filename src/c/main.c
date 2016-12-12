@@ -2,7 +2,7 @@
 
 #define COLORS PBL_IF_COLOR_ELSE(true, false)
 #define ANTIALIASING true
-#define RADIUS_MARGIN 2
+#define RADIUS_MARGIN 3
 #define DIAL_DOTS_MARGIN 11
 #define BLACK_DIAL_MARGIN 24
 #define BATT_DOTS_MARGIN 33
@@ -135,13 +135,6 @@ static void update_proc(Layer *layer, GContext *ctx) {
   graphics_context_set_stroke_width(ctx, 10);
 
   graphics_context_set_antialiased(ctx, ANTIALIASING);
-
-  // Gray clockface
-  graphics_context_set_stroke_width(ctx, DOT_M);
-  graphics_context_set_stroke_color(ctx, GColorDarkGray);
-  graphics_draw_circle(ctx, s_center, s_gray_dial_radius);
-  graphics_context_set_fill_color(ctx, GColorBlack);
-  graphics_fill_circle(ctx, s_center, s_gray_dial_radius);
   
   //dial dots
   for(int i=0; i<60; i++){
@@ -190,13 +183,18 @@ static void update_proc(Layer *layer, GContext *ctx) {
   };  
 
   // Draw hands
-  graphics_context_set_stroke_color(ctx, GColorRed);
+  graphics_context_set_stroke_color(ctx, GColorWhite);
   graphics_context_set_stroke_width(ctx, HAND_STROKE);
   graphics_draw_line(ctx, s_center, hour_hand);
   
-  graphics_context_set_stroke_color(ctx, GColorWhite);
+  graphics_context_set_stroke_color(ctx, GColorRed);
   graphics_context_set_stroke_width(ctx, HAND_STROKE);
   graphics_draw_line(ctx, s_center, minute_hand);
+  
+  // External Gray dial
+  graphics_context_set_stroke_width(ctx, DOT_M);
+  graphics_context_set_stroke_color(ctx, GColorDarkGray);
+  graphics_draw_circle(ctx, s_center, s_gray_dial_radius);
   
   // Black dial
   graphics_context_set_stroke_color(ctx, GColorDarkGray);
@@ -214,13 +212,15 @@ static void update_proc(Layer *layer, GContext *ctx) {
     };
   
     // Draw dots
-    if(i > ((s_battery_level + 10)/20 - 1)){
+    if(i > ((s_battery_level - 10)/20)){
       graphics_context_set_fill_color(ctx, GColorDarkGreen);
       graphics_fill_circle(ctx, dot_centre, DOT_M);
     }
     else {
       if(s_charging)
         graphics_context_set_fill_color(ctx, GColorYellow);
+      else if (s_battery_level <= 10)
+        graphics_context_set_fill_color(ctx, GColorRed);
       else
         graphics_context_set_fill_color(ctx, GColorGreen);
       graphics_fill_circle(ctx, dot_centre, DOT_L);
@@ -327,7 +327,7 @@ static void create_canvas() {
   //set battery dots width
   s_bt_conn_dots_radius_f = s_gray_dial_radius_f - BATT_DOTS_MARGIN;
   //set hand lenght
-  s_hand_lenght_f = s_gray_dial_radius_f;
+  s_hand_lenght_f = s_gray_dial_radius_f-2;
 
   s_canvas_layer = layer_create(bounds);
   layer_set_update_proc(s_canvas_layer, update_proc);
