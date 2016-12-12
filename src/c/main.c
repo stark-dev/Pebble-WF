@@ -52,8 +52,10 @@ static uint8_t s_battery_level;
 static bool s_charging = false;
 static bool s_bt_connected = true;
 
+static bool s_vibration = false;
+
 // dots params
-static uint8_t dot_width = 1;
+static uint8_t dot_width = DOT_S;
 /******************************** Battery Level *******************************/
 
 static void battery_callback(BatteryChargeState state) {
@@ -72,7 +74,8 @@ static void battery_callback(BatteryChargeState state) {
 
 static void bluetooth_callback(bool connected) {
   s_bt_connected = connected;
-  vibes_double_pulse();
+  if(s_vibration)
+    vibes_double_pulse();
 
   // Update meter
   layer_mark_dirty(s_canvas_layer);
@@ -404,6 +407,9 @@ static void init() {
   });
   window_stack_push(s_main_window, true);
   
+  // Disable vibration at startup
+  s_vibration = true;
+  
   // Register for battery level updates
   battery_state_service_subscribe(battery_callback);
   // Ensure battery level is displayed from the start
@@ -414,7 +420,9 @@ static void init() {
     .pebble_app_connection_handler = bluetooth_callback
   });
   // Ensure bluetooth connection is displayed from the start
-  //bluetooth_callback(connection_service_peek_pebble_app_connection());
+  bluetooth_callback(connection_service_peek_pebble_app_connection());
+  // Enable vibration after startup
+  s_vibration = true;
 }
 
 static void deinit() {
