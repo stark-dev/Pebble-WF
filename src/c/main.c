@@ -373,6 +373,7 @@ static void unobstructed_did_change(void *context) {
 }
 
 static void window_load(Window *window) {
+  
   create_canvas();
 
   start_animation();
@@ -384,7 +385,8 @@ static void window_load(Window *window) {
     .will_change = unobstructed_will_change,
     .did_change = unobstructed_did_change
   };
-  //unobstructed_area_service_subscribe(handlers, NULL);  
+  //unobstructed_area_service_subscribe(handlers, NULL);
+
 }
 
 static void window_unload(Window *window) {
@@ -399,16 +401,16 @@ static void init() {
   time_t t = time(NULL);
   struct tm *time_now = localtime(&t);
   tick_handler(time_now, MINUTE_UNIT);
-
+  
+  // Disable vibration at startup
+  s_vibration = false;
+  
   s_main_window = window_create();
   window_set_window_handlers(s_main_window, (WindowHandlers) {
     .load = window_load,
     .unload = window_unload,
   });
   window_stack_push(s_main_window, true);
-  
-  // Disable vibration at startup
-  s_vibration = true;
   
   // Register for battery level updates
   battery_state_service_subscribe(battery_callback);
@@ -421,8 +423,10 @@ static void init() {
   });
   // Ensure bluetooth connection is displayed from the start
   bluetooth_callback(connection_service_peek_pebble_app_connection());
+  
   // Enable vibration after startup
   s_vibration = true;
+  
 }
 
 static void deinit() {
