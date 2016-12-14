@@ -124,12 +124,11 @@ static int hours_to_minutes(int hours_out_of_12) {
 }
 
 static void update_proc(Layer *layer, GContext *ctx) {
-  GRect full_bounds = layer_get_bounds(layer);
-  GRect bounds = layer_get_unobstructed_bounds(layer);
+  GRect bounds = layer_get_bounds(layer);
   s_center = grect_center_point(&bounds);
   
   graphics_context_set_fill_color(ctx, GColorBlack);
-  graphics_fill_rect(ctx, full_bounds, 0, GCornerNone);
+  graphics_fill_rect(ctx, bounds, 0, GCornerNone);
 
   graphics_context_set_stroke_color(ctx, GColorBlack);
   graphics_context_set_stroke_width(ctx, 10);
